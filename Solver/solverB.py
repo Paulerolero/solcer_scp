@@ -7,15 +7,7 @@ from Metaheuristics.GWO import iterarGWO
 from Metaheuristics.PSA import iterarPSA
 from Metaheuristics.SCA import iterarSCA
 from Metaheuristics.WOA import iterarWOA
-
-#----------------------------------------------
-# 09-08-2023
-#GRUPO PID
-#agregar referencia
-#----------------------------------------------
-from Metaheuristics.PID import iterarPID
-#----------------------------------------------
-
+from Metaheuristics.GAO import iterarAnaconda
 from util import util
 from BD.sqlite import BD
 import os
@@ -34,7 +26,7 @@ def solverB(id, mh, maxIter, pop, function, lb, ub, dim):
     
     results = open(dirResult+mh+"_"+function+"_"+str(id)+".csv", "w")
     results.write(
-        f'iter,fitness,time,XPL,XPT\n'
+        f'iter,fitness,time,XPL,XPT,DIV\n'
     )
     
     # Genero una población inicial binaria, esto ya que nuestro problema es binario
@@ -83,7 +75,8 @@ def solverB(id, mh, maxIter, pop, function, lb, ub, dim):
             ", peor iter: "+str(fitness[solutionsRanking[pop-1]])+
             ", time (s): "+str(round(tiempoInicializacion2-tiempoInicializacion1,3))+
             ", XPT: "+str(XPT)+
-            ", XPL: "+str(XPL))
+            ", XPL: "+str(XPL)+
+            ", DIV: "+str(maxDiversidad))
     results.write(
         f'0,{str(BestFitness)},{str(round(tiempoInicializacion2-tiempoInicializacion1,3))},{str(XPL)},{str(XPT)}\n'
     )
@@ -95,16 +88,6 @@ def solverB(id, mh, maxIter, pop, function, lb, ub, dim):
         # perturbo la poblacion con la metaheuristica, pueden usar SCA y GWO
         # en las funciones internas tenemos los otros dos for, for de individuos y for de dimensiones
         # print(poblacion)
-
-        #----------------------------------------------
-        # 09-08-2023
-        #GRUPO PID
-        #----------------------------------------------
-        if mh == "PID":
-            poblacion = iterarPID(dim, poblacion.tolist(), Best.tolist())
-        #----------------------------------------------
-
-
         if mh == "SCA":
             poblacion = iterarSCA(maxIter, iter, dim, poblacion.tolist(), Best.tolist())
         if mh == "GWO":
@@ -113,7 +96,9 @@ def solverB(id, mh, maxIter, pop, function, lb, ub, dim):
             poblacion = iterarWOA(maxIter, iter, dim, poblacion.tolist(), Best.tolist())
         if mh == 'PSA':
             poblacion = iterarPSA(maxIter, iter, dim, poblacion.tolist(), Best.tolist())
-        
+        if mh == "GAO":
+            poblacion = iterarAnaconda(iter, dim, poblacion, Best.tolist()) # elimine iter de la funcion
+
         # calculo de factibilidad de cada individuo y calculo del fitness inicial
         for i in range(poblacion.__len__()):
             for j in range(dim):
@@ -146,10 +131,11 @@ def solverB(id, mh, maxIter, pop, function, lb, ub, dim):
             ", peor iter: "+str(fitness[solutionsRanking[pop-1]])+
             ", time (s): "+str(round(timeEjecuted,3))+
             ", XPT: "+str(XPT)+
-            ", XPL: "+str(XPL))
+            ", XPL: "+str(XPL)+
+            ", DIV: "+str(div_t))
         
         results.write(
-            f'{iter+1},{str(BestFitness)},{str(round(timeEjecuted,3))},{str(XPL)},{str(XPT)}\n'
+            f'{iter+1},{str(BestFitness)},{str(round(timeEjecuted,3))},{str(XPL)},{str(XPT)},{str(div_t)}\n'
         )
     print("------------------------------------------------------------------------------------------------------")
     print("Best fitness: "+str(BestFitness))

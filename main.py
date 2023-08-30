@@ -2,21 +2,45 @@ from Solver.solverSCP import solverSCP
 from Solver.solverB import solverB
 from BD.sqlite import BD
 import json
+from poblarDB import poblar
 # problems = ['ionosphere.data']
 bd = BD()
+#------------
+bd.limpiarTodasLasTablas()
+bd.construirTablas()
+
+
+scp = True
+ben = False
+mhs = ['SCA']
+Trans = 'S2'# V1 a V4 / S1 a S4 / X1 a X4 / Z1 a Z4
+Ds = 'ELIT'#STD - COM - PS - ELIT
+
+
+iteraciones = 50
+experimentos = 1
+poblacion = 50
+instancia = 'scp41'
+
+
+poblar(scp,ben,mhs,Trans,Ds,iteraciones,experimentos,poblacion,instancia)
+#---------------------
+
 
 data = bd.obtenerExperimento()
 
-id              = 0
-instancia       = ''
-problema        = 'F1'
-mh              = 'PID'
-parametrosMH    = ''
-maxIter         = 0
-pop             = 0
-ds              = []
-clasificador    = ''
-parametrosC     = '' 
+# id              = 1
+# instancia       = 'F1'
+# problema        = 'BEN'
+# mh              = 'GAO'
+# parametrosMH    = ''
+# maxIter         = 20
+# pop             = 0
+# ds              = []
+# clasificador    = ''
+# parametrosC     = '' 
+
+
 
 pruebas = 1
 while len(data) > 0: 

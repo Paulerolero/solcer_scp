@@ -272,9 +272,8 @@ class BD:
         
         self.desconectar()
         return data
-    def obtenerMejoresArchivos(self, instancia):
-        #cambio
-        #def obtenerMejoresArchivos(self, instancia, ml):
+    
+    def obtenerMejoresArchivos(self, instancia, ml):
         self.conectar()
         
         cursor = self.getCursor()
@@ -284,21 +283,11 @@ class BD:
             inner join experimentos e on r.fk_id_experimento = e.id_experimento
             inner join iteraciones i on i.fk_id_experimento = e.id_experimento
             inner join instancias i2 on e.fk_id_instancia = i2.id_instancia 
-            where i2.nombre  = '{instancia}'
+            where i2.nombre  = '{instancia}' and e.ML = '{ml}'
             group by e.MH , i2.nombre
                        
         ''')
-        #cambio
-        # cursor.execute(f'''             
-        #     select e.id_experimento , e.MH , E.ML, i2.nombre  , i.nombre , i.archivo , MIN(r.fitness)  
-        #     from resultados r 
-        #     inner join experimentos e on r.fk_id_experimento = e.id_experimento
-        #     inner join iteraciones i on i.fk_id_experimento = e.id_experimento
-        #     inner join instancias i2 on e.fk_id_instancia = i2.id_instancia 
-        #     where i2.nombre  = '{instancia}' and e.ML = '{ml}'
-        #     group by e.MH , i2.nombre
-                       
-        # ''')
+        
         data = cursor.fetchall()
         
         
@@ -415,10 +404,61 @@ class BD:
         
         self.conectar()
         cursor = self.getCursor()
-        cursor.execute(f''' select DISTINCT id_instancia, nombre from instancias i where nombre in ('{problema}')   ''')
+        cursor.execute(f''' select DISTINCT id_instancia, nombre from instancias i where nombre in ({problema})   ''')
         
         data = cursor.fetchall()
         
         
         self.desconectar()
         return data
+    
+
+    def limpiarTablaExperimentos(self):
+        """Limpia la tabla de experimentos."""
+        try:
+            self.conectar()
+            self.getCursor().execute("DELETE FROM experimentos")
+            self.commit()
+            self.desconectar()
+        except sqlite3.Error as e:
+            print(f"Error al limpiar la tabla experimentos: {e}")
+
+    def limpiarTablaInstancias(self):
+        """Limpia la tabla de instancias."""
+        try:
+            self.conectar()
+            self.getCursor().execute("DELETE FROM instancias")
+            self.commit()
+            self.desconectar()
+        except sqlite3.Error as e:
+            print(f"Error al limpiar la tabla instancias: {e}")
+
+    def limpiarTablaResultados(self):
+        """Limpia la tabla de resultados."""
+        try:
+            self.conectar()
+            self.getCursor().execute("DELETE FROM resultados")
+            self.commit()
+            self.desconectar()
+        except sqlite3.Error as e:
+            print(f"Error al limpiar la tabla resultados: {e}")
+
+    def limpiarTablaIteraciones(self):
+        """Limpia la tabla de iteraciones."""
+        try:
+            self.conectar()
+            self.getCursor().execute("DELETE FROM iteraciones")
+            self.commit()
+            self.desconectar()
+        except sqlite3.Error as e:
+            print(f"Error al limpiar la tabla iteraciones: {e}")
+
+    def limpiarTodasLasTablas(self):
+        print("-------------------------------------------------------")
+        print("Limpiando tablas.")
+        self.limpiarTablaExperimentos()
+        self.limpiarTablaInstancias()
+        self.limpiarTablaResultados()
+        self.limpiarTablaIteraciones()
+        print("\nSe han limpiado todas las tablas.")
+        print("-------------------------------------------------------")

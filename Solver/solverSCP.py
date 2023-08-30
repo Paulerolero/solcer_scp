@@ -7,21 +7,15 @@ from Metaheuristics.SCA import iterarSCA
 from Metaheuristics.WOA import iterarWOA
 from Metaheuristics.MFO import iterarMFO
 from Metaheuristics.GA import iterarGA
-
-#----------------------------------------------
-# 09-08-2023
-#GRUPO PID
-#agregar referencia
-#----------------------------------------------
-from Metaheuristics.PID import iterarPID
-#----------------------------------------------
-
+# from Metaheuristics.GAO import iterarAnaconda
+from Metaheuristics.GAO_2 import iterarAnaconda
 from Diversity.hussainDiversity import diversidadHussain
 from Diversity.XPLXTP import porcentajesXLPXPT
 import time
 from Discretization import discretization as b
 from util import util
 from BD.sqlite import BD
+
 
 def solverSCP(id, mh, maxIter, pop, instancia, DS, repairType, param):
     
@@ -111,13 +105,6 @@ def solverSCP(id, mh, maxIter, pop, instancia, DS, repairType, param):
         # perturbo la poblacion con la metaheuristica, pueden usar SCA y GWO
         # en las funciones internas tenemos los otros dos for, for de individuos y for de dimensiones
         # print(poblacion)
-        #----------------------------------------------
-        # 09-08-2023
-        #GRUPO PID
-        #----------------------------------------------
-        if mh=="PID":
-            poblacion = iterarPID(instance.getColumns(),poblacion.tolist(), Best.tolist())
-        #----------------------------------------------
         if mh == "SCA":
             poblacion = iterarSCA(maxIter, iter, instance.getColumns(), poblacion.tolist(), Best.tolist())
         if mh == "GWO":
@@ -129,11 +116,15 @@ def solverSCP(id, mh, maxIter, pop, instancia, DS, repairType, param):
         if mh == "MFO":
             poblacion, bestSolutions = iterarMFO(maxIter, iter, instance.getColumns(), len(poblacion), poblacion, bestSolutions, fitness, BestFitnessArray )
         if mh == "GA":
-            
             cross = float(param.split(";")[0].split(":")[1])
             muta = float(param.split(";")[1].split(":")[1])
             poblacion = iterarGA(poblacion.tolist(), fitness, cross, muta)
-        
+        # if mh == "GAO":
+        #     poblacion = iterarAnaconda(maxIter, iter, instance.getColumns(), poblacion, Best.tolist(),fitness)
+
+        if mh == "GAO":
+            poblacion = iterarAnaconda(maxIter, iter, instance.getColumns(), poblacion, fitness, bestSolutions, BestFitnessArray)
+
         # Binarizo, calculo de factibilidad de cada individuo y calculo del fitness
         for i in range(poblacion.__len__()):
 

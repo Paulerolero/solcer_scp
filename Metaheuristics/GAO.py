@@ -1,137 +1,143 @@
-import random
+import warnings
+
+warnings.simplefilter("ignore", RuntimeWarning)
+
 import numpy as np
-import matplotlib.pyplot as plt
-from statistics import mean, stdev
+import random
 
-class Individual:
-    def __init__(self, position, obj_value):
-        self.position = position
-        self.obj_value = obj_value
+# def iterarGAO(maxIter, t, dimension, poblacion, bestSolution, l, u):
+#   """
+#   Implementación del algoritmo Green Anaconda Optimization (GAO)
 
-def GAO(obj_func, lb, ub, num_var, pop_size, max_iter):
-    """Ejecuta el Algoritmo de Optimización Gacela (GAO).
+#   Args:
+#     maxIter: El número máximo de iteraciones del algoritmo.
+#     t: El número actual de iteración.
+#     dimension: El número de dimensiones del problema.
+#     poblacion: La población a perturbar.
+#     bestSolution: La mejor solución encontrada hasta ahora.
 
-    Args:
-        obj_func: Función objetivo a optimizar.
-        lb: Límites inferiores para las variables.
-        ub: Límites superiores para las variables.
-        num_var: Número de variables.
-        pop_size: Tamaño de la población.
-        max_iter: Número máximo de iteraciones.
+#   Returns:
+#     La mejor solución encontrada por el algoritmo.
+#     La población perturbada.
+#   """
 
-    Returns:
-        El mejor individuo obtenido por el algoritmo.
-    """
-    # Inicializar población
-    population = [Individual([random.uniform(lb[j], ub[j]) for j in range(num_var)], float('inf')) for i in range(pop_size)]
+#   # Identificamos las hembras candidatas utilizando la ecuación (4).
+#   candidate_females_list = []
+#   for i in range(poblacion.shape[0]):
+#         for j in range(poblacion.shape[1]):
+#             if poblacion[i, j] < bestSolution and j != i:
+#                 candidate_females_list.append((i, j))
 
-    for ind in population:
-        ind.obj_value = obj_func(ind.position)
 
-    best_solution = min(population, key=lambda x: x.obj_value)
-    best_obj_value = float("inf")
-    best_values_per_iteration = []
+#   # Calculamos la función de concentración de las hembras candidatas utilizando la ecuación (5).
+#   concentration_function = np.zeros(len(candidate_females_list))
+#   for i, j in candidate_females_list:
+#     concentration_function[i] = candidate_females_list[i][1] - max(candidate_females_list, key=lambda x: x[1])[1]
+#     concentration_function[i] /= sum(concentration_function)
 
-    for t in range(max_iter):
-        for i in range(pop_size):
-            # Fase 1 - Temporada de apareamiento (exploración)
-            selected_female = select_female(population, i)
-            new_position = move_towards_female(population[i], selected_female)
-            new_position = enforce_bounds(new_position, lb, ub)
-            new_obj_value = obj_func(new_position)
+#   # Calculamos la función de probabilidad acumulativa de las hembras candidatas utilizando la ecuación (6).
+#   cumulative_probability_function = np.zeros(len(candidate_females_list) + 1)
+#   cumulative_probability_function[0] = 0
+#   for i in range(len(candidate_females_list)):
+#     cumulative_probability_function[i + 1] = cumulative_probability_function[i] + concentration_function[i]
 
-            if new_obj_value < population[i].obj_value:
-                population[i].position = new_position
-                population[i].obj_value = new_obj_value
+#   # Determinamos la hembra seleccionada utilizando la ecuación (7).
+#   selected_female = []
+#   r = np.random.rand()
+#   for i in range(len(cumulative_probability_function)):
+#     if cumulative_probability_function[i] <= r < cumulative_probability_function[i + 1]:
+#       selected_female = candidate_females_list[i]
+#       break
 
-            # Fase 2 - Estrategia de caza (explotación)
-            nearby_position = generate_nearby_position(population[i], lb, ub, t)
-            nearby_position = enforce_bounds(nearby_position, lb, ub)
-            nearby_obj_value = obj_func(nearby_position)
+#   # Calculamos la nueva posición del miembro GAO i utilizando la ecuación (8).
+#   # new_position_i = poblacion[i] + r * (poblacion[selected_female[0]][selected_female[1]] - poblacion[i][t])
+#   # new_position_i = poblacion[i] + r * (poblacion[selected_female[0]][selected_female[1]] - poblacion[i].item(t))
+#   new_position_i = poblacion[i][t] + r * (poblacion[selected_female[0]][selected_female[1]] - poblacion[i][t])
 
-            if nearby_obj_value < population[i].obj_value:
-                population[i].position = nearby_position
-                population[i].obj_value = nearby_obj_value
 
-            # Actualizar mejor solución
-            if population[i].obj_value < best_solution.obj_value:
-                best_solution = population[i]
-                best_obj_value = population[i].obj_value
 
-        best_values_per_iteration.append(best_obj_value)
 
-    # Gráfica de los mejores valores de función objetivo a través de las iteraciones
-    plt.plot(best_values_per_iteration)
-    plt.xlabel('Iteraciones')
-    plt.ylabel('Mejor valor de función objetivo')
-    plt.title('Evolución del mejor valor de función objetivo')
-    plt.show()
+#   # Actualizamos el miembro GAO i utilizando la ecuación (9).
+#   if bestSolution[i] < poblacion[i][t]:
+#     poblacion[i] = new_position_i
 
-    return best_solution
+#   # Fase 2: estrategia de caza (explotación)
 
-def enforce_bounds(position, lb, ub):
-    """Asegura que las posiciones estén dentro de los límites establecidos.
+#   # Calculamos la nueva posición del mejor individuo utilizando la ecuación (10).
+#   # new_position_best_individual = bestSolution + (1 - 2 * r) * (u - l) * np.sqrt(t)
+#   new_position_best_individual = bestSolution + (1 - 2 * r) * (u[0] - l[0]) * np.sqrt(t)
 
-    Args:
-        position: Posición del individuo.
-        lb: Límites inferiores.
-        ub: Límites superiores.
+#   # Actualizamos el mejor individuo de la población si la nueva posición es mejor.
+#   # if bestSolution[i] < new_position_best_individual:
+#   if any(bestSolution[i] < new_position_best_individual):
+#     bestSolution = new_position_best_individual
 
-    Returns:
-        Posición ajustada según los límites.
-    """
-    return [min(max(position[i], lb[i]), ub[i]) for i in range(len(position))]
+#   # Devolvemos la mejor solución encontrada.
+#   return poblacion, bestSolution
 
-def select_female(population, idx):
-    """Selecciona una hembra para el individuo actual basado en valores objetivos.
+# def iterarGAO(maxIter, t, dimension, poblacion, bestSolution, l, u):
+#     pop_size = poblacion[0].shape
+#     for i in range(pop_size):
+#         selected_female = select_female(poblacion, i, bestSolution)
 
-    Args:
-        population: Población actual.
-        idx: Índice del individuo actual.
+# def select_female(population, idx, bestSolution):
 
-    Returns:
-        Individuo hembra seleccionado.
-    """
-    females = [ind for i, ind in enumerate(population) if ind.obj_value < population[idx].obj_value and i != idx]
+#     females = [ind for i, ind in enumerate(population) if bestSolution < population[idx] and i != idx]
 
-    # Si no hay individuos más fuertes, devolver el individuo actual
-    if not females:
-        return population[idx]
+#     # Si no hay individuos más fuertes, devolver el individuo actual
+#     if not females:
+#         return population[idx]
 
-    # Calcular probabilidad basada en valor objetivo
-    max_obj_value = max(females, key=lambda x: x.obj_value).obj_value
-    probabilities = [female.obj_value - max_obj_value for female in females]
+#     # Calcular probabilidad basada en valor objetivo
+#     max_obj_value = max(females, key=lambda x: x.obj_value)
+#     probabilities = [female - bestSolution for female in females]
 
-    if sum(probabilities) == 0:
-        probabilities = [1/len(females) for _ in females]
-    else:
-        probabilities = [p/sum(probabilities) for p in probabilities]
+#     if sum(probabilities) == 0:
+#         probabilities = [1/len(females) for _ in females]
+#     else:
+#         probabilities = [p/sum(probabilities) for p in probabilities]
 
-    # Seleccionar hembra
-    return random.choices(females, probabilities)[0]
+#     # Seleccionar hembra
+#     return random.choices(females, probabilities)[0]
 
-def move_towards_female(individual, female):
-    """Mueve el individuo actual hacia la hembra seleccionada.
+import numpy as np
 
-    Args:
-        individual: Individuo actual.
-        female: Hembra seleccionada.
+def iterarAnaconda(maxIter, iter, columns, poblacion, Best,fitness):
+    N = len(poblacion)
+    m = columns
+    lb = 0
+    ub = 1
 
-    Returns:
-        Nueva posición para el individuo.
-    """
-    return [individual.position[d] + random.random() * (female.position[d] - random.choice([1,2]) * individual.position[d]) for d in range(len(individual.position))]
+    r = np.random.uniform(0, 1, (N, m))
+    I = np.random.choice([1, 2], (N, m))
 
-def generate_nearby_position(individual, lb, ub, t):
-    """Genera una nueva posición cercana al individuo actual.
+    for t in range(maxIter):
+        for i in range(N):
+            
+            # F_values = [sum(poblacion[k]) for k in range(N)]
+            F_values = fitness
+            
+            CFL_i = [poblacion[k] for k in range(N) if F_values[k] < F_values[i] and k != i]
 
-    Args:
-        individual: Individuo actual.
-        lb: Límites inferiores.
-        ub: Límites superiores.
-        t: Iteración actual.
+            CFF_i = [F_values[k] for k in range(N) if F_values[k] < F_values[i] and k != i]
+            CFF_max_i = max(CFF_i) if CFF_i else 0
 
-    Returns:
-        Nueva posición cercana al individuo.
-    """
-    return [individual.position[d] + (1 - 2 * random.random()) * (ub[d] - lb[d]) / (t+1) for d in range(len(individual.position))]
+            PC_i = [(CFF_j - CFF_max_i) / (sum([CFF_n - CFF_max_i for CFF_n in CFF_i])) for j, CFF_j in enumerate(CFF_i)]
+            
+            C_i = np.cumsum(PC_i)
+
+            selected_index = next((j for j, C_j in enumerate(C_i) if r[i, j] < C_j), -1)
+            SF_i = CFL_i[selected_index] if selected_index != -1 else np.zeros(m)
+
+            x_P1 = poblacion[i] + r[i] * (SF_i - I[i] * poblacion[i])
+
+            if sum(x_P1) < sum(Best):
+                poblacion[i] = x_P1
+
+            x_P2 = poblacion[i] + (1 - 2 * r[i]) * (ub - lb) / iter
+
+
+            if sum(x_P2) < sum(Best):
+                poblacion[i] = x_P2
+
+    return poblacion
